@@ -9,6 +9,14 @@ GXXFLAGS := $(GCCFLAGS) -std=c++11 -fno-exceptions -fno-rtti
 LFLAGS := -nostdlib -Tldscript
 DISTDIR := ../../calcbin
 
+BASE64 := base64 -w0
+ifneq ($(OS),Windows_NT)
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Darwin)
+        BASE64 := base64
+    endif
+endif
+
 all: $(DISTDIR)/ndless_installer_4.5.0.tns
 
 %.o: %.c
@@ -27,7 +35,7 @@ all: $(DISTDIR)/ndless_installer_4.5.0.tns
 	$(OBJCOPY) -O binary $^ $@
 
 payload: ndless_installer.bin
-	(../tools/MakeChunkDispatch/MakeChunkDispatch 0x1800e7f4 0x12480000; cat $^) | base64 -w0 > $@ || rm $@
+	(../tools/MakeChunkDispatch/MakeChunkDispatch 0x1800e7f4 0x12480000; cat $^) | $(BASE64) > $@ || rm $@
 
 ndless_installer.elf: stage0.o stage1.o utils.o
 	$(LD) $(LFLAGS) $^ -o $@
